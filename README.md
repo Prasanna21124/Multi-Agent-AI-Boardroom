@@ -65,8 +65,6 @@ Each agent executes sequentially using **LangGraph workflow orchestration**, pas
 
 ---
 
----
-
 # Vector Store
 
 To enhance contextual intelligence, the system integrates a vector-based memory layer.
