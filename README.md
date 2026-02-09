@@ -148,8 +148,9 @@ Full-Stack-AI-Agent/
 │   │   ├── database.py
 │   │   ├── models.py
 │   ├── conversations.db
-│   
-├── static/
+│   ├── vector/
+│       ├── vector_store.py
+├── frontend/
 │   ├── index.html
 │
 │
