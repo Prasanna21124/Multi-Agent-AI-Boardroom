@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AI Startup Simulator</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #0b1220;
+    color: #e2e8f0;
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+
+.sidebar {
+    width: 240px;
+    background: #0f172a;
+    padding: 32px 24px;
+    border-right: 1px solid #1e293b;
+}
+
+.logo {
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.nav-item {
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.nav-active {
+    background: #1e293b;
+    color: #fff;
+}
+
+/* Main */
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+
+.header {
+    padding: 24px 32px;
+    height: 75px;
+    border-bottom: 1px solid #1e293b;
+}
+
+.header-title {
+    font-weight: 600;
+    font-size: 20px;
+}
+
+/* Chat Area */
+
+.chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Messages */
+
+.message {
+    max-width: 75%;
+    padding: 16px;
+    border-radius: 16px;
+    line-height: 1.6;
+    font-size: 14px;
+    white-space: pre-wrap;
+}
+
+.user-message {
+    align-self: flex-end;
+    background: #6366f1;
+    color: white;
+}
+
+.ai-message {
+    align-self: flex-start;
+    background: #111827;
+    border: 1px solid #1f2937;
+}
+
+/* Structured AI Sections */
+
+.section-title {
+    font-weight: 600;
+    margin-top: 10px;
+    margin-bottom: 6px;
+}
+
+/* Input Area */
+
+.input-area {
+    padding: 20px 30px;
+    border-top: 1px solid #1e293b;
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #1e293b;
+    background: #0f172a;
+    color: white;
+    outline: none;
+}
+
+input:focus {
+    border-color: #6366f1;
+}
+
+button {
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: none;
+    background: #6366f1;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #4f46e5;
+}
+
+.loading {
+    font-size: 13px;
+    color: #60a5fa;
+}
+
+.top-bar {
+  height: 40px;          /* reduce this (try 55px or 50px) */
+  padding: 0 20px;       /* remove extra top-bottom padding */
+  display: flex;
+  align-items: center;   /* keeps logo vertically centered */
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* space between logo and text */
+}
+
+.logo {
+    width: auto;
+    height: 40px;
+    object-fit: contain;
+    position: relative;
+    top: -6px;
+}
+
+.send-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: #6366f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.send-btn:hover {
+    background: #4f46e5;
+    transform: scale(1.08);
+}
+
+</style>
+</head>
+
+<body>
+<div class="main">
+
+<div class="header">
+    <div class="logo-section">
+        <img src="C:\Users\Acer\Desktop\Full Stack AI Agent Project\new_logo.png" alt=" logo" class="logo">
+        <!-- <div class="header-title">AI Boardroom Conversation</div> -->
+    </div>
+    
+</div>
+
+<div class="chat-area" id="chatArea">
+</div>
+
+<div class="input-area">
+    <input type="text" id="chatInput" placeholder="Describe your startup idea..." onkeypress="handleEnter(event)">
+    <button class="send-btn" onclick="sendMessage()">
+        <svg viewBox="4 4 16 16" class="send-icon">
+        <path fill="white" d="M2 21l21-9L2 3v7l15 2-15 2z"/>
+        </svg>
+    </button>
+
+</div>
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const res = await fetch("http://127.0.0.1:8000/plan/history");
+        const data = await res.json();
+
+        data.reverse().forEach(item => {
+            appendMessage(item.user_input, "user-message");
+
+            appendStructuredResponse({
+                clarified_idea: item.clarified_idea,
+                execution_plan: item.execution_plan,
+                risks: item.risks,
+                tools_and_resources: item.tools,
+                market_analysis: item.market_analysis
+            });
+        });
+
+    } catch (err) {
+        console.log("Failed to load history");
+    }
+});
+
+
+function handleEnter(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+}
+
+async function sendMessage() {
+    const input = document.getElementById("chatInput");
+    const chatArea = document.getElementById("chatArea");
+    const idea = input.value.trim();
+
+    if (!idea) return;
+
+    appendMessage(idea, "user-message");
+    input.value = "";
+
+    const loadingMsg = appendMessage("AI agents are analyzing your idea...", "ai-message loading");
+
+    try {
+        const response = await fetch("http://127.0.0.1:8000/plan/stream", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idea: idea })
+        });
+
+        loadingMsg.remove();
+
+        if (!response.ok) {
+            appendMessage("Error generating response", "ai-message");
+            return;
+        }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    let aiMessage = appendMessage("", "ai-message");
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+
+        for (let char of chunk) {
+            aiMessage.textContent += char;
+            await new Promise(resolve => setTimeout(resolve, 5));
+        }
+    }
+
+
+
+
+        } catch (error) {
+            loadingMsg.remove();
+            appendMessage("Unable to connect to backend.", "ai-message");
+        }
+    }
+
+function appendMessage(text, className) {
+    const chatArea = document.getElementById("chatArea");
+    const message = document.createElement("div");
+    message.className = "message " + className;
+    message.innerText = text;
+    chatArea.appendChild(message);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    return message;
+}
+
+function appendStructuredResponse(data) {
+    const chatArea = document.getElementById("chatArea");
+
+    const message = document.createElement("div");
+    message.className = "message ai-message";
+
+    message.innerHTML = `
+        <div class="section-title">📌 Clarified Vision</div>
+        ${data.clarified_idea}
+
+        <div class="section-title">🗂 Execution Roadmap</div>
+        ${data.execution_plan}
+
+        <div class="section-title">⚠ Risk Assessment</div>
+        ${data.risks}
+
+        <div class="section-title">🛠 Technical Strategy</div>
+        ${data.tools_and_resources}
+
+        <div class="section-title">📈 Market Positioning</div>
+        ${data.market_analysis}
+    `;
+
+    chatArea.appendChild(message);
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+</script>
+
+</body>
+</html>
