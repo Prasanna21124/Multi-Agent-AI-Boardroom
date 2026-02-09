@@ -65,6 +65,48 @@ Each agent executes sequentially using **LangGraph workflow orchestration**, pas
 
 ---
 
+---
+
+# Vector Store
+
+To enhance contextual intelligence, the system integrates a vector-based memory layer.
+
+## Purpose
+
+The vector store enables:
+
+- Retrieval of semantically similar past ideas
+- Context-aware AI responses
+- Persistent memory across sessions
+- Improved strategy consistency
+
+Instead of treating each request independently, the system injects relevant historical context into the AI workflow.
+
+## Technologies Used
+
+- OpenAI Embeddings
+- LangChain VectorStore abstraction
+- Local vector storage (FAISS / In-memory store)
+- Memory injection into LangGraph state
+
+---
+
+## Memory Injection Flow
+
+```
+User Input
+    ↓
+Generate Embedding
+    ↓
+Search Similar Documents
+    ↓
+Inject memory_context into LangGraph state
+    ↓
+Multi-agent execution
+```
+
+---
+
 # AI Workflow (LangGraph Execution Flow)
 
 ```
